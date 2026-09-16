@@ -25,7 +25,12 @@
                     <label class="text-xs font-semibold text-gray-900">Password</label>
                     <a href="{% url 'reset_password' %}" class="text-[11px] font-semibold text-blue-600 hover:underline">Forgot password?</a>
                 </div>
-                <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 outline-none focus:border-blue-600 transition-all">
+                <div class="relative flex items-center">
+                    <input type="password" id="loginPassword" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-lg pl-3.5 pr-10 py-2.5 text-xs text-gray-900 outline-none focus:border-blue-600 transition-all">
+                    <button type="button" onclick="togglePasswordVisibility('loginPassword', 'loginPasswordIcon')" class="absolute right-3 text-gray-400 hover:text-gray-600 focus:outline-none" title="Toggle password visibility">
+                        <span id="loginPasswordIcon" class="material-symbols-outlined text-lg">visibility</span>
+                    </button>
+                </div>
             </div>
 
             <button type="submit" class="w-full bg-blue-600 text-white font-semibold text-xs py-3 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
@@ -38,4 +43,19 @@
         </div>
     </div>
 </div>
+
+<script>
+    function togglePasswordVisibility(inputId, iconId) {
+        const input = document.getElementById(inputId);
+        const icon = document.getElementById(iconId);
+        if (!input || !icon) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            icon.textContent = 'visibility_off';
+        } else {
+            input.type = 'password';
+            icon.textContent = 'visibility';
+        }
+    }
+</script>
 {% endblock %}

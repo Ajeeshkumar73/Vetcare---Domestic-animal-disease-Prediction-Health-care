@@ -112,18 +112,82 @@ def logout_view(request):
 
 
 def reset_password_view(request):
+    import sys, random, time
+    step = 'request_otp'
+
     if request.method == 'POST':
-        email = request.POST.get('email', '').strip()
-        new_password = request.POST.get('new_password', '')
-        user = User.objects.filter(email=email).first()
-        if user:
-            user.set_password(new_password)
-            user.save()
-            messages.success(request, "Your password has been reset successfully! Please log in.")
-            return redirect('login')
-        else:
-            messages.error(request, "No account found with that email address.")
-    return render(request, 'auth/reset_password.html')
+        action = request.POST.get('action', 'request_otp')
+
+        if action == 'request_otp':
+            email = request.POST.get('email', '').strip()
+            user = User.objects.filter(email=email).first()
+            if not user:
+                messages.error(request, "No registered account found with that email address.")
+                return render(request, 'auth/reset_password.html', {'step': 'request_otp'})
+
+            # Generate 6-digit OTP
+            otp = str(random.randint(100000, 999999))
+            request.session['reset_otp'] = otp
+            request.session['reset_email'] = email
+            request.session['reset_otp_time'] = time.time()
+
+            # Output OTP to server terminal
+            print("\n" + "=" * 60, flush=True)
+            print(f"  🔑 [SECURITY OTP CODE] Password Reset Request", flush=True)
+            print(f"  Account Email : {email}", flush=True)
+            print(f"  OTP Verification Code : {otp}", flush=True)
+            print(f"  Timestamp     : {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}", flush=True)
+            print("=" * 60 + "\n", flush=True)
+
+            messages.success(request, f"OTP generated for {email}! Please enter the 6-digit OTP printed in your server terminal output.")
+            return render(request, 'auth/reset_password.html', {'step': 'verify_otp', 'email': email})
+
+        elif action == 'verify_otp':
+            email = request.POST.get('email', '').strip()
+            otp_input = request.POST.get('otp', '').strip()
+            new_password = request.POST.get('new_password', '')
+            confirm_password = request.POST.get('confirm_password', '')
+
+            session_otp = request.session.get('reset_otp')
+            session_email = request.session.get('reset_email')
+            session_time = request.session.get('reset_otp_time')
+
+            # Validate OTP code and session
+            if not session_otp or not session_email or session_email != email or otp_input != session_otp:
+                messages.error(request, "Invalid or expired OTP code. Check your terminal output and try again.")
+                return render(request, 'auth/reset_password.html', {'step': 'verify_otp', 'email': email})
+
+            # Validate expiration (10 minutes = 600 seconds)
+            if session_time and (time.time() - session_time > 600):
+                messages.error(request, "OTP code has expired. Please request a new OTP code.")
+                return render(request, 'auth/reset_password.html', {'step': 'request_otp'})
+
+            if new_password != confirm_password:
+                messages.error(request, "New passwords do not match. Please verify your passwords.")
+                return render(request, 'auth/reset_password.html', {'step': 'verify_otp', 'email': email})
+
+            if len(new_password) < 4:
+                messages.error(request, "Password must be at least 4 characters long.")
+                return render(request, 'auth/reset_password.html', {'step': 'verify_otp', 'email': email})
+
+            # Perform password update
+            user = User.objects.filter(email=email).first()
+            if user:
+                user.set_password(new_password)
+                user.save()
+
+                # Clean up session OTP
+                request.session.pop('reset_otp', None)
+                request.session.pop('reset_email', None)
+                request.session.pop('reset_otp_time', None)
+
+                messages.success(request, "Your password has been reset successfully! Please sign in with your new password.")
+                return redirect('login')
+            else:
+                messages.error(request, "User account not found.")
+                return render(request, 'auth/reset_password.html', {'step': 'request_otp'})
+
+    return render(request, 'auth/reset_password.html', {'step': step})
 
 
 # ==========================================
