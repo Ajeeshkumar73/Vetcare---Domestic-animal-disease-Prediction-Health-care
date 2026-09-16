@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+
+{% block title %}Delete {{ pet.name }} - VetCare{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-8">
+    <div class="bg-white border border-gray-200 rounded-xl p-6 text-center shadow-sm">
+        <div class="w-12 h-12 rounded-full bg-red-50 text-red-700 flex items-center justify-center mx-auto mb-3">
+            <span class="material-symbols-outlined text-2xl">warning</span>
+        </div>
+        <h2 class="text-xl font-bold text-gray-900 mb-2">Delete Pet Profile?</h2>
+        <p class="text-xs text-gray-600 mb-6 leading-relaxed">
+            Are you sure you want to delete profile for <strong class="text-gray-900">{{ pet.name }}</strong>? This will permanently remove associated vaccination reminders and health records.
+        </p>
+
+        <form method="POST" class="flex gap-3">
+            {% csrf_token %}
+            <button type="submit" class="flex-1 bg-error text-on-error font-semibold text-xs py-2.5 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">delete</span> Confirm Delete
+            </button>
+            <a href="{% url 'pet_list' %}" class="bg-gray-50 border border-gray-200 text-gray-900 px-4 py-2.5 rounded-lg text-xs font-semibold hover:bg-gray-100">Cancel</a>
+        </form>
+    </div>
+</div>
+{% endblock %}

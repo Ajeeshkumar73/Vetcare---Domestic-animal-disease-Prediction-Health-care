@@ -1,0 +1,167 @@
+{% extends 'base.html' %}
+
+{% block title %}24/7 AI Pet Care Assistant - VetCare{% endblock %}
+
+{% block content %}
+<div class="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden flex flex-col h-[calc(100vh-160px)] min-h-[500px]">
+    <!-- Header -->
+    <div class="px-6 py-4 border-b border-gray-200 bg-white flex justify-between items-center">
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center">
+                <span class="material-symbols-outlined">support_agent</span>
+            </div>
+            <div>
+                <h2 class="text-base font-bold text-gray-900">24/7 AI Pet Care Assistant</h2>
+                <span class="text-xs text-gray-600">
+                    Context: <strong class="text-gray-900">{% if active_pet %}{{ active_pet.name }} ({{ active_pet.species }}){% else %}General Care{% endif %}</strong>
+                </span>
+            </div>
+        </div>
+
+        <span class="bg-green-50 text-green-800 border border-green-200 px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs text-green-600">check_circle</span> System Active
+        </span>
+    </div>
+
+    <!-- Message Body -->
+    <div id="chatBody" class="flex-grow p-6 overflow-y-auto bg-gray-50 space-y-4">
+        {% if chat_history %}
+            {% for msg in chat_history %}
+                <div class="flex {% if msg.sender == 'user' %}justify-end{% else %}justify-start{% endif %}">
+                    <div class="max-w-[80%] rounded-xl p-3.5 text-xs leading-relaxed {% if msg.sender == 'user' %}bg-blue-600 text-white rounded-br-none{% else %}bg-white text-gray-900 border border-gray-200 rounded-bl-none shadow-sm{% endif %}">
+                        <div class="whitespace-pre-wrap">{{ msg.message }}</div>
+                        <span class="text-[10px] opacity-70 block text-right mt-1">{{ msg.timestamp|date:"H:i" }}</span>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="flex justify-start">
+                <div class="max-w-[80%] rounded-xl rounded-bl-none p-3.5 text-xs leading-relaxed bg-white text-gray-900 border border-gray-200 shadow-sm">
+                    <div>Hello! I am your VetCare Pet Care Assistant {% if active_pet %}for {{ active_pet.name }}{% endif %}. Ask me any questions regarding nutrition, grooming, vaccination schedules, flea prevention, or first-aid protocols.</div>
+                    <span class="text-[10px] opacity-70 block text-right mt-1">Just now</span>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Quick Replies Bar -->
+    <div class="px-6 py-2.5 bg-white border-t border-gray-200 flex gap-2 overflow-x-auto">
+        <button onclick="sendQuickReply('Diet & Feeding Tips')" class="bg-gray-50 border border-gray-200 hover:bg-blue-600 hover:text-white text-xs text-gray-600 font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">restaurant</span> Diet &amp; Nutrition
+        </button>
+        <button onclick="sendQuickReply('Vaccination Schedule')" class="bg-gray-50 border border-gray-200 hover:bg-blue-600 hover:text-white text-xs text-gray-600 font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">vaccines</span> Vaccine Schedule
+        </button>
+        <button onclick="sendQuickReply('Grooming Guide')" class="bg-gray-50 border border-gray-200 hover:bg-blue-600 hover:text-white text-xs text-gray-600 font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">soap</span> Grooming &amp; Hygiene
+        </button>
+        <button onclick="sendQuickReply('Flea & Tick Care')" class="bg-gray-50 border border-gray-200 hover:bg-blue-600 hover:text-white text-xs text-gray-600 font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">bug_report</span> Flea &amp; Parasite Care
+        </button>
+        <button onclick="sendQuickReply('Emergency First-Aid Advice')" class="bg-gray-50 border border-gray-200 hover:bg-blue-600 hover:text-white text-xs text-gray-600 font-medium px-3 py-1.5 rounded-full transition-colors whitespace-nowrap flex items-center gap-1">
+            <span class="material-symbols-outlined text-xs">local_hospital</span> First-Aid Protocols
+        </button>
+    </div>
+
+    <!-- Input Bar -->
+    <div class="p-4 bg-white border-t border-gray-200 flex gap-3">
+        <input type="text" id="chatInput" placeholder="Ask about diet, vaccines, grooming, or symptoms..." onkeypress="if(event.key==='Enter') sendMessage();" class="flex-grow bg-gray-50 border border-gray-200 rounded-lg px-4 py-2.5 text-xs text-gray-900 outline-none focus:border-blue-600 focus:bg-white transition-all">
+        <button onclick="sendMessage()" class="bg-blue-600 text-white font-semibold text-xs px-5 py-2.5 rounded-lg hover:opacity-90 transition-opacity flex items-center gap-1">
+            <span>Send</span> <span class="material-symbols-outlined text-sm">send</span>
+        </button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    const activePetId = "{% if active_pet %}{{ active_pet.id }}{% else %}{% endif %}";
+
+    function scrollToBottom() {
+        const chatBody = document.getElementById('chatBody');
+        chatBody.scrollTop = chatBody.scrollHeight;
+    }
+
+    scrollToBottom();
+
+    function appendMessage(sender, text, timestamp, id=null) {
+        const chatBody = document.getElementById('chatBody');
+        const wrapper = document.createElement('div');
+        wrapper.className = `flex ${sender === 'user' ? 'justify-end' : 'justify-start'}`;
+        if (id) wrapper.id = id;
+
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `max-w-[80%] rounded-xl p-3.5 text-xs leading-relaxed ${sender === 'user' ? 'bg-blue-600 text-white rounded-br-none' : 'bg-white text-gray-900 border border-gray-200 rounded-bl-none shadow-sm'}`;
+        msgDiv.innerHTML = `<div class="whitespace-pre-wrap">${text}</div><span class="text-[10px] opacity-70 block text-right mt-1">${timestamp}</span>`;
+
+        wrapper.appendChild(msgDiv);
+        chatBody.appendChild(wrapper);
+        scrollToBottom();
+        return wrapper;
+    }
+
+    function sendQuickReply(text) {
+        document.getElementById('chatInput').value = text;
+        sendMessage();
+    }
+
+    function sendMessage() {
+        const input = document.getElementById('chatInput');
+        const sendBtn = document.querySelector("button[onclick='sendMessage()']");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const now = new Date();
+        const timeStr = now.getHours().toString().padStart(2, '0') + ':' + now.getMinutes().toString().padStart(2, '0');
+
+        appendMessage('user', text, timeStr);
+        input.value = '';
+        input.disabled = true;
+        if (sendBtn) sendBtn.disabled = true;
+
+        // Show typing indicator
+        const loadingId = 'typing-' + Date.now();
+        appendMessage('bot', '<span class="flex items-center gap-1"><span class="">VetCare is thinking...</span></span>', timeStr, loadingId);
+
+        fetch("{% url 'chat_api' %}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": "{{ csrf_token }}"
+            },
+            body: JSON.stringify({
+                message: text,
+                pet_id: activePetId
+            })
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Remove typing indicator
+            const loader = document.getElementById(loadingId);
+            if (loader) loader.remove();
+
+            input.disabled = false;
+            if (sendBtn) sendBtn.disabled = false;
+            input.focus();
+
+            if (data.status === 'success' && data.message) {
+                appendMessage('bot', data.message, data.timestamp || timeStr);
+            } else if (data.error) {
+                appendMessage('bot', `⚠️ Notice: ${data.error}`, timeStr);
+            } else {
+                appendMessage('bot', 'System notice: Unable to process query. Please try again.', timeStr);
+            }
+        })
+        .catch(err => {
+            const loader = document.getElementById(loadingId);
+            if (loader) loader.remove();
+
+            input.disabled = false;
+            if (sendBtn) sendBtn.disabled = false;
+            input.focus();
+
+            appendMessage('bot', 'Network error. Please check your connection and retry.', timeStr);
+        });
+    }
+</script>
+{% endblock %}

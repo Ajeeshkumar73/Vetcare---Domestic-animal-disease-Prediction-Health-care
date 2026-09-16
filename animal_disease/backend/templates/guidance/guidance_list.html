@@ -1,0 +1,87 @@
+{% extends 'base.html' %}
+
+{% block title %}Pet Care & Nutrition Library - VetCare{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Care, Nutrition &amp; Hygiene Library</h1>
+        <p class="text-sm text-gray-600 mt-1">Curated, clinically-reviewed resources for optimal daily pet management.</p>
+    </div>
+
+    <!-- Search Form -->
+    <form method="GET" class="flex gap-2 w-full md:w-72">
+        <input type="text" name="q" value="{{ request.GET.q|default:'' }}" placeholder="Search articles..." class="flex-grow bg-white border border-gray-200 rounded-lg px-3 py-2 text-xs text-gray-900 outline-none focus:border-blue-600 transition-all">
+        <button type="submit" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center">
+            <span class="material-symbols-outlined text-sm">search</span>
+        </button>
+    </form>
+</div>
+
+{% if personalized_articles and active_pet %}
+<div class="bg-gray-50 border border-blue-600/30 rounded-xl p-5 mb-6">
+    <div class="flex items-center gap-2 mb-3">
+        <span class="material-symbols-outlined text-blue-600 text-xl">auto_awesome</span>
+        <div>
+            <h3 class="text-sm font-bold text-blue-600">Personalized Suggestions for {{ active_pet.name }}</h3>
+            <span class="text-xs text-gray-600">Matched for {{ active_pet.species }} &bull; {{ active_pet.life_stage|title }} Stage</span>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+        {% for art in personalized_articles %}
+        <a href="{% url 'guidance_detail' art.id %}" class="bg-white border border-gray-200 rounded-lg p-3 hover:border-blue-600 transition-colors flex flex-col justify-between">
+            <div>
+                <span class="text-[10px] font-bold text-blue-600 uppercase">{{ art.get_category_display }}</span>
+                <h4 class="text-xs font-bold text-gray-900 mt-1 line-clamp-2">{{ art.title }}</h4>
+            </div>
+            <span class="text-[11px] font-semibold text-blue-600 flex items-center gap-1 mt-2">
+                Read Guide <span class="material-symbols-outlined text-xs">arrow_forward</span>
+            </span>
+        </a>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Category Filters -->
+<div class="flex gap-2 mb-6 overflow-x-auto pb-1">
+    <a href="{% url 'guidance_list' %}" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap {% if not category_filter %}bg-blue-600 text-white{% else %}bg-gray-50 text-gray-600 hover:bg-gray-100{% endif %}">All Categories</a>
+    <a href="{% url 'guidance_list' %}?category=nutrition" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap {% if category_filter == 'nutrition' %}bg-blue-600 text-white{% else %}bg-gray-50 text-gray-600 hover:bg-gray-100{% endif %}">Diet &amp; Nutrition</a>
+    <a href="{% url 'guidance_list' %}?category=grooming" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap {% if category_filter == 'grooming' %}bg-blue-600 text-white{% else %}bg-gray-50 text-gray-600 hover:bg-gray-100{% endif %}">Grooming &amp; Hygiene</a>
+    <a href="{% url 'guidance_list' %}?category=vaccination" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap {% if category_filter == 'vaccination' %}bg-blue-600 text-white{% else %}bg-gray-50 text-gray-600 hover:bg-gray-100{% endif %}">Vaccination &amp; Care</a>
+    <a href="{% url 'guidance_list' %}?category=first_aid" class="px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap {% if category_filter == 'first_aid' %}bg-blue-600 text-white{% else %}bg-gray-50 text-gray-600 hover:bg-gray-100{% endif %}">First-Aid Protocols</a>
+</div>
+
+<!-- Articles Grid -->
+{% if articles %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for art in articles %}
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-sm transition-shadow">
+        <div>
+            <div class="flex justify-between items-center mb-3">
+                <span class="text-[10px] font-bold text-blue-600 uppercase bg-blue-600/10 px-2 py-0.5 rounded">
+                    {{ art.get_category_display }}
+                </span>
+                <span class="text-xs text-gray-600 font-semibold">{{ art.species }}</span>
+            </div>
+
+            <h3 class="text-base font-bold text-gray-900 mb-2 leading-snug">{{ art.title }}</h3>
+            <p class="text-xs text-gray-600 leading-relaxed mb-4">{{ art.summary|truncatewords:18 }}</p>
+        </div>
+
+        <a href="{% url 'guidance_detail' art.id %}" class="bg-gray-50 border border-gray-200 text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors">
+            <span>Read Article</span>
+            <span class="material-symbols-outlined text-sm">chevron_right</span>
+        </a>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white border border-gray-200 rounded-xl p-12 text-center shadow-sm">
+    <span class="material-symbols-outlined text-4xl text-gray-500 mb-2">menu_book</span>
+    <h3 class="text-base font-bold text-gray-900">No Guidance Articles Found</h3>
+    <p class="text-xs text-gray-600 mt-1">Try adjusting your query or category selection.</p>
+</div>
+{% endif %}
+{% endblock %}

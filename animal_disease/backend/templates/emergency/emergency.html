@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+
+{% block title %}Emergency First-Aid & Vet Locator - VetCare{% endblock %}
+
+{% block content %}
+<!-- Top Emergency Banner -->
+<div class="bg-red-50 text-red-700 border border-red-200 rounded-xl p-6 md:p-8 mb-6 shadow-sm">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-error text-on-error text-xs font-semibold uppercase tracking-wider mb-2">
+                <span class="material-symbols-outlined text-sm">local_hospital</span> 24/7 Emergency Hub
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold">Critical Pet Emergency &amp; Vet Locator</h1>
+            <p class="text-xs md:text-sm mt-1 opacity-90">Immediate step-by-step first-aid protocols for pet life-threatening situations.</p>
+        </div>
+
+        <a href="https://www.google.com/maps/search/veterinary+clinic+near+me" target="_blank" class="bg-error text-on-error rounded-lg px-4 py-2.5 text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-1.5 whitespace-nowrap">
+            <span class="material-symbols-outlined text-sm">location_on</span> Find Nearest Vet on Maps
+        </a>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- First-Aid Protocols -->
+    <div class="lg:col-span-2 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <h3 class="text-base font-bold text-gray-900 pb-3 mb-4 border-b border-gray-200 flex items-center gap-2">
+            <span class="material-symbols-outlined text-red-600">medical_services</span> Emergency First-Aid Protocols
+        </h3>
+
+        <div class="space-y-4">
+            {% for guide in first_aid_guides %}
+            <div class="bg-gray-50 border border-gray-200 rounded-xl p-4">
+                <h4 class="text-sm font-bold text-gray-900 mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-red-600">emergency</span> {{ guide.title }}
+                </h4>
+
+                <ol class="list-decimal list-inside space-y-1 text-xs text-gray-600 leading-relaxed pl-1">
+                    {% for step in guide.steps %}
+                    <li>{{ step }}</li>
+                    {% endfor %}
+                </ol>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <!-- User Contacts Directory -->
+    <div class="space-y-6">
+        <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+            <h3 class="text-base font-bold text-gray-900 mb-3 flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600">phone</span> Saved Emergency Vet Contacts
+            </h3>
+
+            {% if emergency_contacts %}
+                <div class="space-y-2 mb-4">
+                    {% for c in emergency_contacts %}
+                    <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center text-xs">
+                        <div>
+                            <strong class="font-bold text-gray-900 block">{{ c.name }}</strong>
+                            <span class="text-[11px] text-gray-600">{{ c.clinic|default:"Emergency Clinic" }}</span>
+                        </div>
+                        <a href="tel:{{ c.phone }}" class="bg-blue-600 text-white px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1">
+                            <span class="material-symbols-outlined text-xs">call</span> {{ c.phone }}
+                        </a>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <p class="text-xs text-gray-600 mb-4">No custom emergency contacts saved yet.</p>
+            {% endif %}
+
+            <!-- Add Contact Form -->
+            <form method="POST" class="pt-3 border-t border-gray-200 space-y-2.5">
+                {% csrf_token %}
+                <input type="hidden" name="add_contact" value="1">
+                <div class="text-xs font-bold text-gray-900">Add Emergency Contact</div>
+
+                <input type="text" name="contact_name" required placeholder="Vet / Clinic Name" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-900 outline-none">
+                <input type="text" name="contact_phone" required placeholder="Phone Number" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-900 outline-none">
+                <input type="text" name="contact_clinic" placeholder="Clinic Address / City" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3 py-1.5 text-xs text-gray-900 outline-none">
+
+                <button type="submit" class="w-full bg-gray-50 border border-gray-200 hover:bg-gray-100 text-gray-900 text-xs font-semibold py-2 rounded-lg transition-colors flex items-center justify-center gap-1">
+                    <span class="material-symbols-outlined text-xs">add</span> Save Emergency Contact
+                </button>
+            </form>
+        </div>
+
+        <div class="bg-orange-50 border border-orange-200 rounded-xl p-4 text-xs text-orange-900 leading-relaxed">
+            <strong class="font-bold flex items-center gap-1 text-amber-950 mb-1">
+                <span class="material-symbols-outlined text-sm">support_agent</span> Poison Control Note
+            </strong>
+            If your pet ingests unknown chemicals, human medication, or toxic plants, contact your nearest emergency veterinary hospital or animal poison control immediately.
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>{% block title %}VetCare - Clinical Pet Care System{% endblock %}</title>
+    <!-- Tailwind CSS CDN & Plugins -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <!-- Chart.js for Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .material-symbols-outlined { font-size: 20px; vertical-align: middle; }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col">
+    <!-- Top Bar -->
+    <header class="bg-white border-b border-gray-200 sticky top-0 z-50 w-full px-4 md:px-12 max-w-7xl mx-auto py-3 md:py-4 flex justify-between items-center">
+        <div class="flex items-center gap-6">
+            <a href="{% url 'landing' %}" class="text-2xl font-bold text-blue-600 flex items-center gap-2">
+                <span class="material-symbols-outlined text-3xl">pets</span> VetCare
+            </a>
+
+            <!-- Navigation Links -->
+            <nav class="hidden md:flex items-center gap-6">
+                {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Dashboard</a>
+                <a href="{% url 'disease_prediction' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Disease Predictor</a>
+                <a href="{% url 'pet_list' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Pet Profiles</a>
+                <a href="{% url 'guidance_list' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Library</a>
+                <a href="{% url 'emergency' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Emergency</a>
+                {% else %}
+                <a href="{% url 'landing' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Home</a>
+                <a href="{% url 'disease_prediction' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Disease Predictor</a>
+                <a href="{% url 'guidance_list' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Library</a>
+                <a href="{% url 'emergency' %}" class="text-sm font-semibold text-gray-600 hover:text-blue-600 transition-colors">Emergency</a>
+                {% endif %}
+            </nav>
+        </div>
+
+        <div class="flex items-center gap-3">
+            <!-- Emergency Link -->
+            <a href="{% url 'emergency' %}" class="bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition-colors rounded-lg px-3 py-1.5 text-xs font-semibold flex items-center gap-1">
+                <span class="material-symbols-outlined text-sm">local_hospital</span> Emergency 24/7
+            </a>
+
+            {% if user.is_authenticated %}
+            <!-- Active Pet Switcher -->
+            <div class="relative">
+                <button id="petSwitchBtn" onclick="togglePetDropdown()" class="bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors rounded-lg px-3 py-1.5 text-xs font-semibold text-gray-900 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-blue-600 text-sm">pets</span>
+                    <span>{% if active_pet %}{{ active_pet.name }} ({{ active_pet.species }}){% else %}Select Pet{% endif %}</span>
+                    <span class="material-symbols-outlined text-xs">expand_more</span>
+                </button>
+
+                <!-- Dropdown -->
+                <div id="petDropdownMenu" class="hidden absolute right-0 top-10 bg-white border border-gray-200 rounded-lg shadow-sm w-56 z-50 py-2">
+                    <div class="px-3 py-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">Switch Active Pet</div>
+                    {% for p in pets %}
+                        <a href="{% url 'switch_active_pet' p.id %}" class="flex items-center gap-2 px-3 py-2 text-xs font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                            <span class="material-symbols-outlined text-xs {% if p == active_pet %}text-blue-600{% else %}text-gray-500{% endif %}">circle</span>
+                            {{ p.name }} ({{ p.species }})
+                        </a>
+                    {% empty %}
+                        <div class="px-3 py-2 text-xs text-gray-600">No pets registered.</div>
+                    {% endfor %}
+                    <div class="border-t border-gray-200 mt-1 pt-1">
+                        <a href="{% url 'pet_create' %}" class="flex items-center gap-2 px-3 py-1.5 text-xs font-semibold text-blue-600 hover:bg-gray-50">
+                            <span class="material-symbols-outlined text-xs">add</span> Add New Pet
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- User Menu -->
+            <div class="flex items-center gap-2 text-xs font-semibold text-gray-600 pl-2 border-l border-gray-200">
+                <span class="material-symbols-outlined text-blue-600">account_circle</span>
+                <span class="hidden sm:inline">{{ user.username }}</span>
+                <a href="{% url 'logout' %}" class="text-gray-500 hover:text-red-600 transition-colors ml-1" title="Sign Out">
+                    <span class="material-symbols-outlined text-sm">logout</span>
+                </a>
+            </div>
+            {% else %}
+            <a href="{% url 'login' %}" class="bg-transparent border border-gray-200 text-gray-900 hover:bg-gray-100 transition-colors rounded-lg px-4 py-2 text-xs font-semibold hidden sm:inline-block">Sign In</a>
+            <a href="{% url 'signup' %}" class="bg-blue-600 text-white rounded-lg px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity">Get Started</a>
+            {% endif %}
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="flex-grow flex w-full max-w-7xl mx-auto">
+        <!-- Sidebar Navigation (Shown only in dashboard/app pages, hidden on landing & auth pages) -->
+        {% if request.resolver_match.url_name != 'landing' and request.resolver_match.url_name != 'login' and request.resolver_match.url_name != 'signup' and request.resolver_match.url_name != 'reset_password' %}
+        <aside class="w-64 bg-white border-r border-gray-200 p-4 flex flex-col gap-1 min-h-[calc(100vh-65px)] flex-shrink-0 hidden md:flex">
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider px-3 mt-2 mb-1">Core Modules</div>
+            <a href="{% url 'dashboard' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if request.resolver_match.url_name == 'dashboard' %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">dashboard</span> Overview Dashboard
+            </a>
+            <a href="{% url 'pet_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if 'pet' in request.resolver_match.url_name %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">pets</span> Pet Profiles
+            </a>
+            <a href="{% url 'disease_prediction' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if request.resolver_match.url_name == 'disease_prediction' %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">medical_services</span> Clinical Predictor
+            </a>
+
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider px-3 mt-4 mb-1">Health & Diagnostics</div>
+            <a href="{% url 'symptom_checker' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if request.resolver_match.url_name == 'symptom_checker' %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">fact_check</span> Symptom Evaluator
+            </a>
+            <a href="{% url 'chat' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if request.resolver_match.url_name == 'chat' %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">support_agent</span> 24/7 Virtual Assistant
+            </a>
+            <a href="{% url 'reminder_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if 'reminder' in request.resolver_match.url_name %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">event_available</span> Vaccination Reminders
+            </a>
+            <a href="{% url 'health_record_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if 'health_record' in request.resolver_match.url_name %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">folder_shared</span> Digital Health Records
+            </a>
+
+            <div class="text-[11px] font-semibold text-gray-500 uppercase tracking-wider px-3 mt-4 mb-1">Analytics & Guidance</div>
+            <a href="{% url 'analytics' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if request.resolver_match.url_name == 'analytics' %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">insights</span> Reports & Analytics
+            </a>
+            <a href="{% url 'guidance_list' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if 'guidance' in request.resolver_match.url_name %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">menu_book</span> Clinical Library
+            </a>
+            <a href="{% url 'emergency' %}" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-xs font-semibold transition-colors {% if request.resolver_match.url_name == 'emergency' %}bg-blue-600/10 text-blue-600 border-l-2 border-blue-600{% else %}text-gray-600 hover:bg-gray-50 hover:text-gray-900{% endif %}">
+                <span class="material-symbols-outlined">local_hospital</span> Emergency First-Aid
+            </a>
+        </aside>
+        {% endif %}
+
+        <!-- Main Content Area -->
+        <main class="flex-grow p-4 md:p-8 w-full max-w-full overflow-hidden">
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                <div class="p-3 rounded-lg text-xs font-medium border flex items-center gap-2
+                    {% if message.tags == 'success' %}bg-green-50 text-green-800 border-green-200{% elif message.tags == 'error' %}bg-red-50 text-red-700 border-red-200{% else %}bg-gray-50 text-gray-900 border-gray-200{% endif %}">
+                    <span class="material-symbols-outlined text-sm">info</span>
+                    <div>{{ message }}</div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block content %}{% endblock %}
+        </main>
+    </div>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-gray-200 w-full py-8 px-4 md:px-12 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mt-auto">
+        <div class="text-sm font-bold text-gray-900 mb-3 md:mb-0">VetCare</div>
+        <p class="text-xs text-gray-600 text-center md:text-left mb-3 md:mb-0 max-w-md">2026 VetCare Medical Systems. All rights reserved. Clinical AI-driven veterinary diagnostics.</p>
+        <div class="flex flex-wrap justify-center gap-4 text-xs font-medium text-gray-600">
+            <a class="hover:text-blue-600 transition-colors" href="#">Privacy Policy</a>
+            <a class="hover:text-blue-600 transition-colors" href="#">Terms of Service</a>
+            <a class="hover:text-blue-600 transition-colors" href="#">Clinical Ethics</a>
+            <a class="hover:text-blue-600 transition-colors" href="#">Contact Support</a>
+        </div>
+    </footer>
+
+    <script>
+        function togglePetDropdown() {
+            const menu = document.getElementById('petDropdownMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        window.addEventListener('click', function(e) {
+            const btn = document.getElementById('petSwitchBtn');
+            const menu = document.getElementById('petDropdownMenu');
+            if (btn && menu && !btn.contains(e.target) && !menu.contains(e.target)) {
+                menu.classList.add('hidden');
+            }
+        });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

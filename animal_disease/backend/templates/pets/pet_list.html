@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block title %}Pet Profiles - VetCare{% endblock %}
+
+{% block content %}
+<div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Pet Profiles</h1>
+        <p class="text-sm text-gray-600 mt-1">Manage pet metrics, photos, microchip IDs, and weight logs.</p>
+    </div>
+
+    <a href="{% url 'pet_create' %}" class="bg-blue-600 text-white rounded-lg px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-sm">add</span> Register Pet Profile
+    </a>
+</div>
+
+{% if pets %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for pet in pets %}
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm flex flex-col justify-between hover:shadow-sm transition-shadow">
+        <div>
+            <div class="flex items-center gap-4 mb-4">
+                <div class="w-16 h-16 rounded-xl bg-gray-50 border border-gray-200 overflow-hidden flex items-center justify-center text-blue-600 text-2xl flex-shrink-0">
+                    {% if pet.photo %}
+                        <img src="{{ pet.photo.url }}" alt="{{ pet.name }}" class="w-full h-full object-cover">
+                    {% else %}
+                        <span class="material-symbols-outlined text-3xl">pets</span>
+                    {% endif %}
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold text-gray-900">{{ pet.name }}</h3>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider bg-blue-600/10 text-blue-600 px-2 py-0.5 rounded">
+                        {{ pet.species }} &bull; {{ pet.breed }}
+                    </span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-2 bg-gray-50 border border-gray-200 rounded-lg p-2.5 text-center text-xs mb-4">
+                <div>
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase block">Age</span>
+                    <strong class="text-gray-900">{{ pet.age_display }}</strong>
+                </div>
+                <div>
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase block">Gender</span>
+                    <strong class="text-gray-900">{{ pet.gender }}</strong>
+                </div>
+                <div>
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase block">Weight</span>
+                    <strong class="text-gray-900">{{ pet.weight_kg }} kg</strong>
+                </div>
+            </div>
+
+            {% if pet.microchip_id %}
+            <div class="text-xs text-gray-600 flex items-center gap-1 mb-4">
+                <span class="material-symbols-outlined text-sm text-gray-500">memory</span> Microchip ID: <strong class="text-gray-900">{{ pet.microchip_id }}</strong>
+            </div>
+            {% endif %}
+        </div>
+
+        <div class="flex gap-2 pt-3 border-t border-gray-200">
+            <a href="{% url 'switch_active_pet' pet.id %}" class="flex-grow bg-blue-600 text-white text-xs font-semibold py-2 rounded-lg text-center hover:opacity-90 transition-opacity flex items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-sm">check</span> Active Context
+            </a>
+            <a href="{% url 'pet_edit' pet.id %}" class="bg-gray-50 border border-gray-200 text-gray-900 hover:bg-gray-100 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center" title="Edit Profile">
+                <span class="material-symbols-outlined text-sm">edit</span>
+            </a>
+            <a href="{% url 'pet_delete' pet.id %}" class="bg-gray-50 border border-gray-200 text-red-600 hover:bg-red-50 hover:text-red-700 px-3 py-2 rounded-lg text-xs font-semibold flex items-center justify-center" title="Delete Profile">
+                <span class="material-symbols-outlined text-sm">delete</span>
+            </a>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="bg-white border border-gray-200 rounded-xl p-12 text-center shadow-sm">
+    <span class="material-symbols-outlined text-4xl text-gray-500 mb-2">pets</span>
+    <h3 class="text-base font-bold text-gray-900">No Pet Profiles Found</h3>
+    <p class="text-xs text-gray-600 max-w-sm mx-auto mt-1 mb-4">Register your first pet to enable personalized AI diagnostics and health tracking.</p>
+    <a href="{% url 'pet_create' %}" class="bg-blue-600 text-white rounded-lg px-4 py-2 text-xs font-semibold hover:opacity-90 inline-flex items-center gap-1.5">
+        <span class="material-symbols-outlined text-sm">add</span> Create First Pet Profile
+    </a>
+</div>
+{% endif %}
+{% endblock %}

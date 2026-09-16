@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Sign In - VetCare{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto my-8">
+    <div class="bg-white border border-gray-200 rounded-xl p-8 shadow-sm">
+        <div class="text-center mb-6">
+            <div class="w-12 h-12 rounded-xl bg-gray-50 border border-gray-200 text-blue-600 flex items-center justify-center mx-auto mb-3">
+                <span class="material-symbols-outlined text-2xl">lock</span>
+            </div>
+            <h2 class="text-2xl font-bold text-gray-900">Welcome Back</h2>
+            <p class="text-xs text-gray-600 mt-1">Sign in to access pet health records, AI diagnostics, and reminders.</p>
+        </div>
+
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            <div>
+                <label class="block text-xs font-semibold text-gray-900 mb-1">Username or Email</label>
+                <input type="text" name="username" required placeholder="Enter username or email" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 outline-none focus:border-blue-600 transition-all">
+            </div>
+
+            <div>
+                <div class="flex justify-between items-center mb-1">
+                    <label class="text-xs font-semibold text-gray-900">Password</label>
+                    <a href="{% url 'reset_password' %}" class="text-[11px] font-semibold text-blue-600 hover:underline">Forgot password?</a>
+                </div>
+                <input type="password" name="password" required placeholder="••••••••" class="w-full bg-gray-50 border border-gray-200 rounded-lg px-3.5 py-2.5 text-xs text-gray-900 outline-none focus:border-blue-600 transition-all">
+            </div>
+
+            <button type="submit" class="w-full bg-blue-600 text-white font-semibold text-xs py-3 rounded-lg hover:opacity-90 transition-opacity flex items-center justify-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">login</span> Sign In
+            </button>
+        </form>
+
+        <div class="mt-6 pt-4 border-t border-gray-200 text-center text-xs text-gray-600">
+            Don't have an account? <a href="{% url 'signup' %}" class="font-bold text-blue-600 hover:underline">Create an account</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

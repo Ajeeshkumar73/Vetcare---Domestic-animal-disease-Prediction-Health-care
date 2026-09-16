@@ -1,0 +1,178 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - VetCare Clinical Pet Care{% endblock %}
+
+{% block content %}
+<!-- Welcome Banner -->
+<div class="bg-white border border-gray-200 rounded-xl p-6 md:p-8 mb-6 shadow-sm">
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-md bg-blue-600/10 text-blue-600 text-xs font-semibold uppercase tracking-wider mb-2">
+                <span class="material-symbols-outlined text-sm">health_and_safety</span> Clinical Overview Hub
+            </div>
+            <h1 class="text-2xl md:text-3xl font-bold text-gray-900">Welcome Back, {{ user.username }}</h1>
+            <p class="text-sm text-gray-600 mt-1">
+                {% if active_pet %}
+                    Monitoring health records, vaccination schedules, and AI diagnostics for <strong class="text-gray-900">{{ active_pet.name }}</strong> ({{ active_pet.species }}).
+                {% else %}
+                    Manage your pets, track health records, run AI disease predictions, and schedule vaccination reminders.
+                {% endif %}
+            </p>
+        </div>
+
+        <div class="flex flex-wrap gap-3">
+            <a href="{% url 'disease_prediction' %}" class="bg-blue-600 text-white rounded-lg px-4 py-2 text-xs font-semibold hover:opacity-90 transition-opacity flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">medical_services</span> Disease Predictor
+            </a>
+            <a href="{% url 'pet_create' %}" class="bg-transparent border border-gray-200 text-gray-900 hover:bg-gray-50 transition-colors rounded-lg px-4 py-2 text-xs font-semibold flex items-center gap-1.5">
+                <span class="material-symbols-outlined text-sm">add</span> Register Pet
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Stats Grid -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <!-- Stat 1 -->
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Active Pet Score</span>
+            <div class="w-8 h-8 rounded-lg bg-green-50 text-green-700 flex items-center justify-center border border-green-200">
+                <span class="material-symbols-outlined text-sm">favorite</span>
+            </div>
+        </div>
+        <div class="text-3xl font-bold {% if health_score >= 80 %}text-green-700{% elif health_score >= 50 %}text-amber-700{% else %}text-red-600{% endif %}">
+            {{ health_score }}%
+        </div>
+        <div class="text-xs text-gray-600 mt-1">
+            {% if active_pet %}{{ active_pet.name }}'s Health Rating{% else %}No Pet Selected{% endif %}
+        </div>
+    </div>
+
+    <!-- Stat 2 -->
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Reminders Due</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-600/10 text-blue-600 flex items-center justify-center border border-blue-600/20">
+                <span class="material-symbols-outlined text-sm">event_available</span>
+            </div>
+        </div>
+        <div class="text-3xl font-bold text-blue-600">
+            {{ upcoming_reminders.count }}
+        </div>
+        <div class="text-xs font-semibold {% if overdue_count > 0 %}text-red-600{% else %}text-gray-600{% endif %} mt-1">
+            {% if overdue_count > 0 %}{{ overdue_count }} Overdue Vaccine(s){% else %}All schedules up to date{% endif %}
+        </div>
+    </div>
+
+    <!-- Stat 3 -->
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Health Records</span>
+            <div class="w-8 h-8 rounded-lg bg-gray-50 text-gray-900 flex items-center justify-center border border-gray-200">
+                <span class="material-symbols-outlined text-sm">folder_shared</span>
+            </div>
+        </div>
+        <div class="text-3xl font-bold text-gray-900">
+            {{ total_records }}
+        </div>
+        <div class="text-xs text-gray-600 mt-1">
+            Diagnoses & lab notes
+        </div>
+    </div>
+
+    <!-- Stat 4 -->
+    <div class="bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+        <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-semibold text-gray-500 uppercase tracking-wider">Registered Pets</span>
+            <div class="w-8 h-8 rounded-lg bg-gray-50 text-gray-900 flex items-center justify-center border border-gray-200">
+                <span class="material-symbols-outlined text-sm">pets</span>
+            </div>
+        </div>
+        <div class="text-3xl font-bold text-gray-900">
+            {{ total_pets }}
+        </div>
+        <div class="text-xs text-gray-600 mt-1">
+            Managed profiles
+        </div>
+    </div>
+</div>
+
+<!-- 2-Column Main Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <!-- Reminders Section -->
+    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600">event_available</span> Upcoming Vaccination Reminders
+            </h3>
+            <a href="{% url 'reminder_create' %}" class="bg-gray-50 border border-gray-200 hover:bg-gray-100 transition-colors rounded-md px-3 py-1 text-xs font-semibold text-gray-900 flex items-center gap-1">
+                <span class="material-symbols-outlined text-xs">add</span> Add
+            </a>
+        </div>
+
+        {% if upcoming_reminders %}
+            <div class="space-y-3">
+                {% for r in upcoming_reminders %}
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                        <div class="text-xs font-bold text-gray-900">{{ r.vaccine_name }}</div>
+                        <div class="text-xs text-gray-600 mt-0.5">
+                            {{ r.pet.name }} &bull; Due: <span class="text-blue-600 font-semibold">{{ r.due_date|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+                    <a href="{% url 'reminder_toggle' r.id %}" class="bg-white border border-gray-200 hover:bg-gray-100 transition-colors rounded px-2.5 py-1 text-xs font-semibold text-gray-900 flex items-center gap-1">
+                        <span class="material-symbols-outlined text-xs">check</span> Complete
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-600">
+                <span class="material-symbols-outlined text-4xl text-gray-500 mb-2">event_note</span>
+                <p class="text-xs">No upcoming reminders scheduled.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Recent Records Section -->
+    <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+        <div class="flex justify-between items-center pb-4 mb-4 border-b border-gray-200">
+            <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
+                <span class="material-symbols-outlined text-blue-600">folder_shared</span> Recent Health Records
+            </h3>
+            <a href="{% url 'health_record_list' %}" class="text-xs font-semibold text-blue-600 hover:underline">
+                View All
+            </a>
+        </div>
+
+        {% if recent_records %}
+            <div class="space-y-3">
+                {% for rec in recent_records %}
+                <div class="bg-gray-50 border border-gray-200 rounded-lg p-3 flex justify-between items-center">
+                    <div>
+                        <span class="text-[10px] font-semibold text-blue-600 uppercase bg-blue-600/10 px-2 py-0.5 rounded">
+                            {{ rec.get_record_type_display }}
+                        </span>
+                        <div class="text-xs font-bold text-gray-900 mt-1">{{ rec.title }}</div>
+                        <div class="text-xs text-gray-600 mt-0.5">
+                            {{ rec.pet.name }} &bull; {{ rec.record_date|date:"M d, Y" }}
+                        </div>
+                    </div>
+                    {% if active_pet %}
+                    <a href="{% url 'health_record_export_pdf' active_pet.id %}" class="text-blue-600 hover:opacity-80" title="Export PDF">
+                        <span class="material-symbols-outlined">picture_as_pdf</span>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-600">
+                <span class="material-symbols-outlined text-4xl text-gray-500 mb-2">folder_open</span>
+                <p class="text-xs">No health records logged yet.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
